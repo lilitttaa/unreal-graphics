@@ -1,8 +1,8 @@
+#include "/Engine/Private/Common.ush"
 #include "/Engine/Public/Platform.ush"
 
 Texture2D MyTexture;
 SamplerState MyTextureSampler;
-float4 MyColor;
 
 void MainVS(
 	in float4 InPosition : ATTRIBUTE0,  
@@ -21,6 +21,20 @@ void MainPS(
 	out float4 OutColor : SV_Target0
 )
 {
-	OutColor = float4(MyTexture.Sample(MyTextureSampler, UV.xy).rgb, 1.0f);  
-	OutColor *= MyColor; 
+	float4 Color = float4(0, 0, 0, 0);
+	switch (MyShaderColorStruct.ColorIndex)
+	{
+		case 0:
+			Color = MyShaderColorStruct.ColorOne;
+		break;
+		case 1:
+			Color = MyShaderColorStruct.ColorTwo;
+		break;
+		case 2:
+			Color = MyShaderColorStruct.ColorThree;
+		break;
+		default:
+			Color = MyShaderColorStruct.ColorFour;
+	}
+	OutColor = Color*float4(MyTexture.Sample(MyTextureSampler, UV.xy).rgb, 1.0f);  
 }

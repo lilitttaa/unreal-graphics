@@ -3,13 +3,15 @@
 #include "TestShaderBlueprintLibrary.h"
 #include "Engine/TextureRenderTarget2D.h"
 
+IMPLEMENT_GLOBAL_SHADER_PARAMETER_STRUCT(FMyShaderColorUniformParamater, "MyShaderColorStruct");
+
 struct FMyShaderVertex
 {
 	FVector4 Position;
 	FVector2D UV;
 };
 
-class FMyShaderQuadVertexBuffer: public FVertexBuffer
+class FMyShaderQuadVertexBuffer : public FVertexBuffer
 {
 public:
 	/**
@@ -20,27 +22,26 @@ public:
 		// create a static vertex buffer
 		FRHIResourceCreateInfo CreateInfo;
 		VertexBufferRHI = RHICreateVertexBuffer(sizeof(FMyShaderVertex) * 4, BUF_Static, CreateInfo);
-		void* VoidPtr   = RHILockVertexBuffer(VertexBufferRHI, 0, sizeof(FMyShaderVertex) * 4, RLM_WriteOnly);
+		void* VoidPtr = RHILockVertexBuffer(VertexBufferRHI, 0, sizeof(FMyShaderVertex) * 4, RLM_WriteOnly);
 		// Generate the vertices used
 		FMyShaderVertex* Vertices = reinterpret_cast<FMyShaderVertex*>(VoidPtr);
-		Vertices[0].Position        = FVector4(-1.0f, -1.0f, 0.0f, 1.0f);
-		Vertices[1].Position        = FVector4(1.0f, -1.0f, 0.0f, 1.0f);
-		Vertices[2].Position        = FVector4(-1.0f, 1.0f, 0.0f, 1.0f);
-		Vertices[3].Position        = FVector4(1.0f, 1.0f, 0.0f, 1.0f);
-		Vertices[0].UV              = FVector2D(0.0f, 0.0f);
-		Vertices[1].UV              = FVector2D(1.0f, 0.0f);
-		Vertices[2].UV              = FVector2D(0.0f, 1.0f);
-		Vertices[3].UV              = FVector2D(1.0f, 1.0f);
+		Vertices[0].Position = FVector4(-1.0f, -1.0f, 0.0f, 1.0f);
+		Vertices[1].Position = FVector4(1.0f, -1.0f, 0.0f, 1.0f);
+		Vertices[2].Position = FVector4(-1.0f, 1.0f, 0.0f, 1.0f);
+		Vertices[3].Position = FVector4(1.0f, 1.0f, 0.0f, 1.0f);
+		Vertices[0].UV = FVector2D(0.0f, 0.0f);
+		Vertices[1].UV = FVector2D(1.0f, 0.0f);
+		Vertices[2].UV = FVector2D(0.0f, 1.0f);
+		Vertices[3].UV = FVector2D(1.0f, 1.0f);
 		RHIUnlockVertexBuffer(VertexBufferRHI);
 	}
 };
 
-
-
-class FMyShaderVertexDeclaration: public FRenderResource
+class FMyShaderVertexDeclaration : public FRenderResource
 {
 public:
 	FVertexDeclarationRHIRef VertexDeclarationRHI;
+
 	virtual void InitRHI() override
 	{
 		FVertexDeclarationElementList Elements;
@@ -48,15 +49,14 @@ public:
 		Elements.Add(FVertexElement(0, STRUCT_OFFSET(FMyShaderVertex, UV), VET_Float2, 1, sizeof(FMyShaderVertex)));
 		VertexDeclarationRHI = PipelineStateCache::GetOrCreateVertexDeclaration(Elements);
 	}
-	virtual void ReleaseRHI() override
-	{
-		VertexDeclarationRHI.SafeRelease();
-	}
+
+	virtual void ReleaseRHI() override { VertexDeclarationRHI.SafeRelease(); }
 };
 
 TGlobalResource<FMyShaderQuadVertexBuffer> GMyShaderQuadVertexBuffer;
+
 void DrawTestShaderRenderTarget_RenderThread(FRHICommandListImmediate& RHICmdList, FTextureRenderTargetResource* OutputRenderTargetResource,
-	ERHIFeatureLevel::Type FeatureLevel, FName TextureRenderTargetName, FLinearColor MyColor, FTextureReferenceRHIRef MyTexture)
+	ERHIFeatureLevel::Type FeatureLevel, FName TextureRenderTargetName, const FMyShaderStructData& ColorData, FTextureReferenceRHIRef MyTexture)
 {
 	check(IsInRenderingThread());
 
@@ -81,7 +81,7 @@ void DrawTestShaderRenderTarget_RenderThread(FRHICommandListImmediate& RHICmdLis
 
 		FMyShaderVertexDeclaration VertexDec;
 		VertexDec.InitRHI();
-		
+
 		// Set the graphic pipeline state.
 		FGraphicsPipelineStateInitializer GraphicsPSOInit;
 		RHICmdList.ApplyCachedRenderTargets(GraphicsPSOInit);
@@ -93,8 +93,8 @@ void DrawTestShaderRenderTarget_RenderThread(FRHICommandListImmediate& RHICmdLis
 		GraphicsPSOInit.BoundShaderState.VertexShaderRHI = VertexShader.GetVertexShader();
 		GraphicsPSOInit.BoundShaderState.PixelShaderRHI = PixelShader.GetPixelShader();
 		SetGraphicsPipelineState(RHICmdList, GraphicsPSOInit);
-		
-		PixelShader->SetParameters(RHICmdList, MyColor, MyTexture);
+
+		PixelShader->SetParameters(RHICmdList, ColorData, MyTexture);
 
 		RHICmdList.SetStreamSource(0, GMyShaderQuadVertexBuffer.VertexBufferRHI, 0);
 		RHICmdList.DrawPrimitive(0, 2, 1);
@@ -103,7 +103,8 @@ void DrawTestShaderRenderTarget_RenderThread(FRHICommandListImmediate& RHICmdLis
 	RHICmdList.Transition(FRHITransitionInfo(RenderTargetTexture, ERHIAccess::RTV, ERHIAccess::SRVMask));
 }
 
-void UTestShaderBlueprintLibrary::DrawMyShader2RenderTarget(UTextureRenderTarget2D* OutputRenderTarget, FLinearColor Color, UTexture* Texture)
+void UTestShaderBlueprintLibrary::DrawMyShader2RenderTarget(UTextureRenderTarget2D* OutputRenderTarget, const FMyShaderStructData& ColorData,
+	UTexture* Texture)
 {
 	check(IsInGameThread());
 	if (!OutputRenderTarget)
@@ -119,13 +120,14 @@ void UTestShaderBlueprintLibrary::DrawMyShader2RenderTarget(UTextureRenderTarget
 		return;
 	}
 
-	FTextureReferenceRHIRef TextureRHI= Texture->TextureReference.TextureReferenceRHI;
+	FTextureReferenceRHIRef TextureRHI = Texture->TextureReference.TextureReferenceRHI;
 
 	ENQUEUE_RENDER_COMMAND(CaptureCommand)
 	(
-		[TextureRenderTargetResource, Color, TextureRHI](FRHICommandListImmediate& RHICmdList)
+		[TextureRenderTargetResource, ColorData, TextureRHI](FRHICommandListImmediate& RHICmdList)
 		{
-			DrawTestShaderRenderTarget_RenderThread(RHICmdList, TextureRenderTargetResource, GMaxRHIFeatureLevel, FName("MyShader"), Color, TextureRHI);
+			DrawTestShaderRenderTarget_RenderThread(RHICmdList, TextureRenderTargetResource, GMaxRHIFeatureLevel, FName("MyShader"), ColorData,
+				TextureRHI);
 		}
 	);
 }
