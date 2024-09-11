@@ -24,7 +24,7 @@ class MYCGPLUGIN_API UTestShaderBlueprintLibrary : public UBlueprintFunctionLibr
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "MyCGPlugin")
-	static void DrawMyShader2RenderTarget(UTextureRenderTarget2D* OutputRenderTarget, FLinearColor Color);
+	static void DrawMyShader2RenderTarget(UTextureRenderTarget2D* OutputRenderTarget, FLinearColor Color, UTexture* Texture);
 };
 
 class FMyShader : public FGlobalShader
@@ -68,14 +68,21 @@ public:
 		: FMyShader(Initializer)
 	{
 		MyColorParameter.Bind(Initializer.ParameterMap, TEXT("MyColor"));
+		MyTextureParameter.Bind(Initializer.ParameterMap, TEXT("MyTexture"));
+		MyTextureSamplerParameter.Bind(Initializer.ParameterMap, TEXT("MyTextureSampler"));
 	}
 
-	void SetParameters(FRHICommandListImmediate& RHICmdList, FLinearColor Color)
+	void SetParameters(FRHICommandListImmediate& RHICmdList, FLinearColor Color, FTextureReferenceRHIRef Texture)
 	{
+		SetShaderValue(RHICmdList, RHICmdList.GetBoundPixelShader(), MyColorParameter, Color);
+		SetTextureParameter(RHICmdList, RHICmdList.GetBoundPixelShader(), MyTextureParameter, MyTextureSamplerParameter,
+			TStaticSamplerState<SF_Bilinear, AM_Clamp, AM_Clamp, AM_Clamp>::GetRHI(), Texture);
 		SetShaderValue(RHICmdList, RHICmdList.GetBoundPixelShader(), MyColorParameter, Color);
 	}
 private:
 	LAYOUT_FIELD(FShaderParameter, MyColorParameter);
+	LAYOUT_FIELD(FShaderResourceParameter, MyTextureParameter);
+	LAYOUT_FIELD(FShaderResourceParameter, MyTextureSamplerParameter);
 };
 
 
