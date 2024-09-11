@@ -1,0 +1,2 @@
+C:\MainDic\PAN\demo\EM\Plugins\MyCGPlugin\Intermediate\Build\Win64\UE4Editor\Development\MyCGPlugin\Definitions.MyCGPlugin.h
+C:\MainDic\PAN\demo\EM\Plugins\MyCGPlugin\Source\MyCGPlugin\Public\MyCGPlugin.h
