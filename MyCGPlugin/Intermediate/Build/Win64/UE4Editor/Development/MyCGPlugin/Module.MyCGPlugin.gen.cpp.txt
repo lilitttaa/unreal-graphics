@@ -1,7 +1,0 @@
-C:\MainDic\PAN\demo\EM\Plugins\MyCGPlugin\Intermediate\Build\Win64\UE4Editor\Development\MyCGPlugin\Definitions.MyCGPlugin.h
-C:/MainDic/PAN/demo/EM/Plugins/MyCGPlugin/Intermediate/Build/Win64/UE4Editor/Inc/MyCGPlugin/MyCGPlugin.init.gen.cpp
-C:\MainDic\unrealengine\Engine\Source\Runtime\CoreUObject\Public\UObject/GeneratedCppIncludes.h
-C:\MainDic\unrealengine\Engine\Source\Runtime\CoreUObject\Public\UObject/MetaData.h
-C:/MainDic/PAN/demo/EM/Plugins/MyCGPlugin/Intermediate/Build/Win64/UE4Editor/Inc/MyCGPlugin/TestShaderBlueprintLibrary.gen.cpp
-C:\MainDic\PAN\demo\EM\Plugins\MyCGPlugin\Source\MyCGPlugin/Public/TestShaderBlueprintLibrary.h
-C:\MainDic\PAN\demo\EM\Plugins\MyCGPlugin\Intermediate\Build\Win64\UE4Editor\Inc\MyCGPlugin\TestShaderBlueprintLibrary.generated.h
